@@ -1,0 +1,15 @@
+#
+# Epilog 模板
+# 用途：执行后处理 - 清理临时对象、汇总日志、输出结果文件
+#
+
+# ===== 清理临时对象 =====
+# TODO: 销毁 Prolog 中创建的临时 View/Subset
+# ViewDestroy('TargetCube', 'TempView');
+# SubsetDestroy('TargetDim', 'TempSubset');
+
+# ===== 汇总日志 =====
+# LogOutput('INFO', '===== Process Summary =====');
+# LogOutput('INFO', 'Total rows processed: ' | NumberToString(nProcessedRows));
+# LogOutput('INFO', 'Total error rows: ' | NumberToString(nErrorRows));
+# LogOutput('INFO', cProcessName | ' completed.');

@@ -1,0 +1,50 @@
+{
+  "_spec_to_mcp_mapping": {
+    "_comment": "Each top-level field maps to specific MCP tool calls. Follow the execution order below.",
+    "execution_order": [
+      "1. dimension_name + elements + edges + hierarchy -> create_dimension()",
+      "2. attributes[] -> create_element_attribute() for each attribute",
+      "3. attribute_values[] -> write_element_attributes() (batch)",
+      "4. subsets[] -> create_subset() for each (static: elements, dynamic: expression)"
+    ],
+    "field_descriptions": {
+      "dimension_name": "Passed to create_dimension as dimension_name",
+      "hierarchy_name": "Passed to create_dimension as hierarchy. null = use dimension_name.",
+      "elements": "Passed to create_dimension as elements array [{name, type}]",
+      "edges": "Passed to create_dimension as edges array [{parent, child, weight}]",
+      "attributes": "Each item -> create_element_attribute(dimension_name, attribute_name, attribute_type)",
+      "attribute_values": "Entire array -> write_element_attributes(dimension_name, attribute_values)",
+      "subsets": "Each item -> create_subset. If type=static: pass elements. If type=dynamic: pass expression."
+    }
+  },
+  "dimension_name": "Region",
+  "hierarchy_name": null,
+  "elements": [
+    {"name": "Total Region", "type": "Consolidated"},
+    {"name": "North", "type": "Numeric"},
+    {"name": "South", "type": "Numeric"},
+    {"name": "East", "type": "Numeric"},
+    {"name": "West", "type": "Numeric"}
+  ],
+  "edges": [
+    {"parent": "Total Region", "child": "North", "weight": 1.0},
+    {"parent": "Total Region", "child": "South", "weight": 1.0},
+    {"parent": "Total Region", "child": "East", "weight": 1.0},
+    {"parent": "Total Region", "child": "West", "weight": 1.0}
+  ],
+  "add_edges": [],
+  "remove_edges": [],
+  "attributes": [
+    {"name": "Region Code", "type": "Alias"}
+  ],
+  "attribute_values": [
+    {"element": "North", "attribute": "Region Code", "value": "R01"},
+    {"element": "South", "attribute": "Region Code", "value": "R02"},
+    {"element": "East", "attribute": "Region Code", "value": "R03"},
+    {"element": "West", "attribute": "Region Code", "value": "R04"}
+  ],
+  "subsets": [
+    {"name": "All Leaves", "type": "dynamic", "expression": "{TM1FilterByLevel({TM1SubsetAll([Region])}, 0)}"},
+    {"name": "All Regions", "type": "static", "elements": ["North", "South", "East", "West"]}
+  ]
+}

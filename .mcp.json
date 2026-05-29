@@ -1,0 +1,17 @@
+{
+     
+     "mcpServers":{
+          
+          "tm1":{
+               
+               "command":".venv/Scripts/python.exe",
+               "args":["tm1_mcp_server/tm1_mcp_tool.py"]
+               
+          }
+          
+          
+     }
+     
+     
+     
+}

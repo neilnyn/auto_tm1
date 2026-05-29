@@ -1,0 +1,146 @@
+{
+  "_spec_to_mcp_mapping": {
+    "_comment": "Each top-level field maps to specific MCP tool calls.",
+    "execution_order": [
+      "1. dimension_name + elements + edges + hierarchy -> create_dimension()",
+      "2. attributes[] -> create_element_attribute() for each attribute",
+      "3. attribute_values[] -> write_element_attributes() (batch)",
+      "4. subsets[] -> create_subset() for each"
+    ]
+  },
+  "dimension_name": "}APQ Process Execution Log Measure",
+  "hierarchy_name": null,
+  "elements": [
+    {
+      "name": "nProcessStartTime",
+      "type": "Numeric"
+    },
+    {
+      "name": "nProcessStartedFlag",
+      "type": "Numeric"
+    },
+    {
+      "name": "nProcessExecutionIndex",
+      "type": "Numeric"
+    },
+    {
+      "name": "nProcessExecutionIntraDayIndex",
+      "type": "Numeric"
+    },
+    {
+      "name": "nProcessFinishTime",
+      "type": "Numeric"
+    },
+    {
+      "name": "nProcessCompletedFlag",
+      "type": "Numeric"
+    },
+    {
+      "name": "nMetaDataRecordCount",
+      "type": "Numeric"
+    },
+    {
+      "name": "nDataRecordCount",
+      "type": "Numeric"
+    },
+    {
+      "name": "nPrologMinorErrorCount",
+      "type": "Numeric"
+    },
+    {
+      "name": "nMetaDataMinorErrorCount",
+      "type": "Numeric"
+    },
+    {
+      "name": "nDataMinorErrorCount",
+      "type": "Numeric"
+    },
+    {
+      "name": "nProcessReturnCode",
+      "type": "Numeric"
+    },
+    {
+      "name": "sRunBy",
+      "type": "String"
+    },
+    {
+      "name": "sParams",
+      "type": "String"
+    },
+    {
+      "name": "sProcessErrorLogFile",
+      "type": "String"
+    },
+    {
+      "name": "Total }APQ Process Execution Log Measure",
+      "type": "Consolidated"
+    }
+  ],
+  "edges": [
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nProcessStartTime",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nProcessStartedFlag",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nProcessExecutionIndex",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nProcessExecutionIntraDayIndex",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nProcessFinishTime",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nProcessCompletedFlag",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nMetaDataRecordCount",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nDataRecordCount",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nPrologMinorErrorCount",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nMetaDataMinorErrorCount",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nDataMinorErrorCount",
+      "weight": 1.0
+    },
+    {
+      "parent": "Total }APQ Process Execution Log Measure",
+      "child": "nProcessReturnCode",
+      "weight": 1.0
+    }
+  ],
+  "add_edges": [],
+  "remove_edges": [],
+  "attributes": [],
+  "attribute_values": [],
+  "subsets": []
+}

@@ -1,0 +1,21 @@
+#
+# Data 模板
+# 用途：数据处理 - 从数据源逐行读取并写入目标 Cube
+#
+
+# ===== 数据校验 =====
+# TODO: 校验数据源字段值是否合法
+# IF(vValue @= '');
+#   ItemReject('Empty value detected');
+# ENDIF;
+
+# ===== 数据写入 =====
+# TODO: 将数据写入目标 Cube
+# CellPutN(vNumericValue, 'TargetCube', vDim1, vDim2, vMeasure);
+# CellPutS(vStringValue, 'TargetCube', vDim1, vDim2, vMeasure);
+
+# ===== 计数器更新 =====
+# nProcessedRows = nProcessedRows + 1;
+# IF(MOD(nProcessedRows, 1000) = 0);
+#   LogOutput('INFO', 'Processed ' | NumberToString(nProcessedRows) | ' rows...');
+# ENDIF;

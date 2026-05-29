@@ -1,0 +1,42 @@
+# CLAUDE.md
+
+## Project Overview
+
+Auto_TM1 uses Claude Code to automate IBM TM1 (Planning Analytics) development — building model structures (dimensions, cubes, views, subsets, data) and creating TurboIntegrator (TI) processes. It provides a TM1 MCP Server that lets Claude Code explore live TM1 instances and deploy changes directly.
+
+## Architecture
+
+```
+Claude Code  ←stdio→  tm1_mcp_server/tm1_mcp_tool.py  (FastMCP tool definitions)
+                              │
+                       tm1_mcp_server/tm1_connector.py  (TM1Manager class — all TM1 logic)
+                              │
+                         TM1py / TM1 REST API  →  TM1 Server
+```
+
+- **tm1_mcp_tool.py** — FastMCP server entry point, auto-started by Claude Code via `.mcp.json`.
+- **tm1_connector.py** — `TM1Manager` class: connection lifecycle, config loading from `config/tm1py_config.ini`, all TM1 read/write operations.
+- **.claude/skills/tm1-process-writer/** — TI code templates and reference docs (coding conventions, TI function reference).
+- **.claude/skills/tm1-model-builder/** — Spec templates for dimension/cube creation.
+
+## Skill Selection Guide
+
+| Task | Skill |
+|------|-------|
+| Create dimensions/hierarchies, build cubes, load seed data, set up subsets/views, verify model structure | **tm1-model-builder** |
+| Develop TI processes (Prolog/Metadata/Data/Epilog), ETL logic, scheduled data loads, debug existing processes | **tm1-process-writer** |
+
+**Cross-skill hand-off**: When model-builder finishes and the model needs TI automation, generate a "Model Build Summary for TI Development" (cube names, dimension order, subsets, seed data, what TI should automate, instance name). The user includes this summary when invoking process-writer, so the next session has full context without re-exploring.
+
+**Concurrent needs**: If a task requires both skills, complete model-builder first, then hand off to process-writer. Do not interleave.
+
+## Rules
+
+- **Always plan first**: after you finish the plan task make sure execute ExitPlanMode
+- **TM1 exploration**: Always use targeted queries with filters — e.g. list_cubes(filter="APQ"),get_dimension_info(dimension_name="Account"). Never do full-instance scans (listing all dims/cubes/processes without a filter) unless the user explicitly asks for it.
+- **tm1 explorer**: For multi-step TM1 exploration always use `Agent` tool with `subagent_type="tm1-explorer"` to avoid context explosion
+- **TI code review**: After generating any TI Process code, always run `Agent` tool with `subagent_type="ti-code-reviewer"` before presenting code to the user
+- **TI scripts execute server-side** — never use local system commands in TI code
+- **Credentials**: `config/tm1py_config.ini` contains TM1 server credentials — never commit to git
+- **Windows environment** — use forward slashes in paths within bash, backslashes may appear in Python paths
+- **Python runtime**: Use `.venv/Scripts/python.exe` when running Python commands

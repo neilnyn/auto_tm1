@@ -1,0 +1,18 @@
+#
+# Metadata 模板
+# 用途：元数据处理 - Dimension/Element/Hierarchy 增删改
+#
+
+# ===== Dimension 维护 =====
+# TODO: 根据需求创建/更新 Dimension 结构
+# 示例:
+# IF(DIMIX('TargetDim', vElement) = 0);
+#   DimensionElementInsert('TargetDim', '', vElement, 'N');
+# ENDIF;
+
+# ===== Hierarchy 维护 =====
+# TODO: 维护 Element 的层级关系
+# DimensionElementComponentAdd('TargetDim', vParent, vChild, 1.0);
+
+# ===== Subset 维护 =====
+# TODO: 创建/更新 Subset 定义

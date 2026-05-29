@@ -1,0 +1,43 @@
+{
+  "_spec_to_mcp_mapping": {
+    "_comment": "Each top-level field maps to specific MCP tool calls.",
+    "execution_order": [
+      "1. dimension_name + elements + edges + hierarchy -> create_dimension()",
+      "2. attributes[] -> create_element_attribute() for each attribute",
+      "3. attribute_values[] -> write_element_attributes() (batch)",
+      "4. subsets[] -> create_subset() for each"
+    ]
+  },
+  "dimension_name": "}APQ Cube Last Updated Measure",
+  "hierarchy_name": null,
+  "elements": [
+    {
+      "name": "nLastTimeUpdate",
+      "type": "Numeric"
+    },
+    {
+      "name": "sProcess",
+      "type": "String"
+    },
+    {
+      "name": "sProcessRunBy",
+      "type": "String"
+    },
+    {
+      "name": "Total }APQ Cube Last Updated Measure",
+      "type": "Consolidated"
+    }
+  ],
+  "edges": [
+    {
+      "parent": "Total }APQ Cube Last Updated Measure",
+      "child": "nLastTimeUpdate",
+      "weight": 1.0
+    }
+  ],
+  "add_edges": [],
+  "remove_edges": [],
+  "attributes": [],
+  "attribute_values": [],
+  "subsets": []
+}

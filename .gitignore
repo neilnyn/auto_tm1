@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+
+# Config (contains credentials)
+config/tm1py_config.ini
+
+# IDE
+.idea/
+*.iml
+
+# pytest
+.pytest_cache/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# uv lock (optional — uncomment if you don't want to track it)
+# uv.lock

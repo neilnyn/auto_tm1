@@ -1,0 +1,46 @@
+{
+  "_spec_to_mcp_mapping": {
+    "_comment": "Each top-level field maps to specific MCP tool calls. Follow the execution order below.",
+    "execution_order": [
+      "1. cube_name + dimensions → create_cube()",
+      "2. views[] → create_view() for each view",
+      "3. seed_data → write method depends on seed_data.method field",
+      "4. verify → verify_cube()"
+    ],
+    "seed_methods": {
+      "bulk": "Use write_bulk(). cellset = dict of element-tuple strings to values. Best for small-to-medium datasets.",
+      "cell": "Use write_cell() per entry in cells[] array. Each entry has elements[] and value. Good for a few specific cells.",
+      "file": "Use write_file(). Requires file_path on the TM1 server. CSV column order must match cube dimension order, last column = values."
+    }
+  },
+  "cube_name": "Revenue",
+  "dimensions": ["Account", "Period", "Scenario"],
+  "views": [
+    {
+      "name": "Actual Summary",
+      "mdx": "SELECT {[Scenario].[Actual]} ON 0, NON EMPTY [Account].Members ON 1 FROM [Revenue]"
+    }
+  ],
+  "seed_data": {
+    "method": "bulk",
+    "cellset": {
+      "('Salary','Jan','Actual')": 5000,
+      "('Salary','Feb','Actual')": 5200
+    },
+    "_method_cell_example": {
+      "method": "cell",
+      "cells": [
+        {"elements": ["Salary", "Jan", "Actual"], "value": 5000},
+        {"elements": ["Salary", "Feb", "Actual"], "value": 5200}
+      ]
+    },
+    "_method_file_example": {
+      "method": "file",
+      "file_path": "data/revenue_seed.csv"
+    }
+  },
+  "verify": {
+    "expected_dimensions": ["Account", "Period", "Scenario"],
+    "check_has_data": true
+  }
+}

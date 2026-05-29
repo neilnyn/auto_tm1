@@ -1,0 +1,76 @@
+{
+  "_spec_to_mcp_mapping": {
+    "_comment": "Each top-level field maps to specific MCP tool calls. Follow the execution order below.",
+    "execution_order": [
+      "1. dimension_name + elements + edges + hierarchy -> create_dimension()",
+      "2. attributes[] -> create_element_attribute() for each attribute",
+      "3. attribute_values[] -> write_element_attributes() (batch)",
+      "4. subsets[] -> create_subset() for each (static: elements, dynamic: expression)"
+    ],
+    "field_descriptions": {
+      "dimension_name": "Passed to create_dimension as dimension_name",
+      "hierarchy_name": "Passed to create_dimension as hierarchy. null = use dimension_name.",
+      "elements": "Passed to create_dimension as elements array [{name, type}]",
+      "edges": "Passed to create_dimension as edges array [{parent, child, weight}]",
+      "attributes": "Each item -> create_element_attribute(dimension_name, attribute_name, attribute_type)",
+      "attribute_values": "Entire array -> write_element_attributes(dimension_name, attribute_values)",
+      "subsets": "Each item -> create_subset. If type=static: pass elements. If type=dynamic: pass expression."
+    }
+  },
+  "dimension_name": "Product",
+  "hierarchy_name": null,
+  "elements": [
+    {"name": "Total Product", "type": "Consolidated"},
+    {"name": "Electronics", "type": "Consolidated"},
+    {"name": "Clothing", "type": "Consolidated"},
+    {"name": "Laptop", "type": "Numeric"},
+    {"name": "Phone", "type": "Numeric"},
+    {"name": "Tablet", "type": "Numeric"},
+    {"name": "TV", "type": "Numeric"},
+    {"name": "T-Shirt", "type": "Numeric"},
+    {"name": "Jeans", "type": "Numeric"},
+    {"name": "Jacket", "type": "Numeric"},
+    {"name": "Sneakers", "type": "Numeric"}
+  ],
+  "edges": [
+    {"parent": "Total Product", "child": "Electronics", "weight": 1.0},
+    {"parent": "Total Product", "child": "Clothing", "weight": 1.0},
+    {"parent": "Electronics", "child": "Laptop", "weight": 1.0},
+    {"parent": "Electronics", "child": "Phone", "weight": 1.0},
+    {"parent": "Electronics", "child": "Tablet", "weight": 1.0},
+    {"parent": "Electronics", "child": "TV", "weight": 1.0},
+    {"parent": "Clothing", "child": "T-Shirt", "weight": 1.0},
+    {"parent": "Clothing", "child": "Jeans", "weight": 1.0},
+    {"parent": "Clothing", "child": "Jacket", "weight": 1.0},
+    {"parent": "Clothing", "child": "Sneakers", "weight": 1.0}
+  ],
+  "add_edges": [],
+  "remove_edges": [],
+  "attributes": [
+    {"name": "Category", "type": "String"},
+    {"name": "Product Code", "type": "Alias"}
+  ],
+  "attribute_values": [
+    {"element": "Laptop", "attribute": "Category", "value": "Electronics"},
+    {"element": "Laptop", "attribute": "Product Code", "value": "E001"},
+    {"element": "Phone", "attribute": "Category", "value": "Electronics"},
+    {"element": "Phone", "attribute": "Product Code", "value": "E002"},
+    {"element": "Tablet", "attribute": "Category", "value": "Electronics"},
+    {"element": "Tablet", "attribute": "Product Code", "value": "E003"},
+    {"element": "TV", "attribute": "Category", "value": "Electronics"},
+    {"element": "TV", "attribute": "Product Code", "value": "E004"},
+    {"element": "T-Shirt", "attribute": "Category", "value": "Clothing"},
+    {"element": "T-Shirt", "attribute": "Product Code", "value": "C001"},
+    {"element": "Jeans", "attribute": "Category", "value": "Clothing"},
+    {"element": "Jeans", "attribute": "Product Code", "value": "C002"},
+    {"element": "Jacket", "attribute": "Category", "value": "Clothing"},
+    {"element": "Jacket", "attribute": "Product Code", "value": "C003"},
+    {"element": "Sneakers", "attribute": "Category", "value": "Clothing"},
+    {"element": "Sneakers", "attribute": "Product Code", "value": "C004"}
+  ],
+  "subsets": [
+    {"name": "All Leaves", "type": "dynamic", "expression": "{TM1FilterByLevel({TM1SubsetAll([Product])}, 0)}"},
+    {"name": "Electronics Only", "type": "dynamic", "expression": "{TM1DrilldownMember({[Product].[Electronics]}, ALL, RECURSIVE)}"},
+    {"name": "Clothing Only", "type": "dynamic", "expression": "{TM1DrilldownMember({[Product].[Clothing]}, ALL, RECURSIVE)}"}
+  ]
+}

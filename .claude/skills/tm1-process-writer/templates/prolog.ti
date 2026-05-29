@@ -1,0 +1,35 @@
+#
+# Prolog 模板
+# 用途：执行前处理 - 参数解析、数据源定义、变量初始化、前置条件检查
+#
+
+# ===== 参数定义 =====
+# TODO: 根据实际需求定义参数
+# 示例:
+# vParamValue = '' | Expand('') | pParamName;
+
+# ===== 数据源定义 =====
+# TODO: 根据数据源类型配置 DataSource
+# ASCII 数据源示例:
+# DataSourceType = 'CHARACTERDELIMITED';
+# DataSourceNameForServer = vFilePath;
+# DataSourceNameForClient = vFilePath;
+# DatasourceASCIIHeaderRecords = 1;
+# DatasourceASCIIDelimiter = ',';
+# DatasourceASCIIQuoteCharacter = '"';
+
+# ===== 变量/常量初始化 =====
+# TODO: 初始化计数器和其他辅助变量
+# nProcessedRows = 0;
+# nErrorRows = 0;
+# cProcessName = GetProcessName();
+
+# ===== 前置条件检查 =====
+# TODO: 检查 Cube/Dimension/View 是否存在
+# IF(CubeExists('TargetCube') = 0);
+#   LogOutput('ERROR', 'Target cube does not exist');
+#   ProcessBreak();
+# ENDIF;
+
+# ===== 日志 =====
+# LogOutput('INFO', cProcessName | ' started. Data source: ' | DataSourceNameForServer);
