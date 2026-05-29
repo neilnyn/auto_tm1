@@ -26,6 +26,10 @@ config/tm1py_config.ini
 # Docs (local working documents)
 docs/
 
+# Agent memory (private, per-user)
+.claude/agent-memory/*/*.md
+!.claude/agent-memory/*/MEMORY.md
+
 # OS
 Thumbs.db
 .DS_Store
