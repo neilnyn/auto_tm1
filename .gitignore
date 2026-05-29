@@ -27,8 +27,7 @@ config/tm1py_config.ini
 docs/
 
 # Agent memory (private, per-user)
-.claude/agent-memory/*/*.md
-!.claude/agent-memory/*/MEMORY.md
+.claude/agent-memory/
 
 # OS
 Thumbs.db
