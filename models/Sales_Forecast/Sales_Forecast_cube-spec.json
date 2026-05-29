@@ -1,0 +1,97 @@
+{
+  "_spec_to_mcp_mapping": {
+    "_comment": "Each top-level field maps to specific MCP tool calls. Follow the execution order below.",
+    "execution_order": [
+      "1. cube_name + dimensions -> create_cube()",
+      "2. views[] -> create_view() for each view",
+      "3. seed_data -> write method depends on seed_data.method field",
+      "4. verify -> verify_cube()"
+    ],
+    "seed_methods": {
+      "bulk": "Use write_bulk(). cellset = dict of element-tuple strings to values. Best for small-to-medium datasets.",
+      "cell": "Use write_cell() per entry in cells[] array. Each entry has elements[] and value. Good for a few specific cells.",
+      "file": "Use write_file(). Requires file_path on the TM1 server. CSV column order must match cube dimension order, last column = values."
+    }
+  },
+  "cube_name": "Sales_Forecast",
+  "dimensions": ["Product", "Region", "Month"],
+  "views": [
+    {
+      "name": "Electronics by Region",
+      "mdx": "SELECT {[Region].[Total Region]} ON 0, NON EMPTY {TM1DrilldownMember({[Product].[Electronics]}, ALL, RECURSIVE)} ON 1 FROM [Sales_Forecast] WHERE ([Month].[Total Year])"
+    },
+    {
+      "name": "Clothing by Region",
+      "mdx": "SELECT {[Region].[Total Region]} ON 0, NON EMPTY {TM1DrilldownMember({[Product].[Clothing]}, ALL, RECURSIVE)} ON 1 FROM [Sales_Forecast] WHERE ([Month].[Total Year])"
+    },
+    {
+      "name": "All Products Monthly",
+      "mdx": "SELECT {[Month].[Jan], [Month].[Feb], [Month].[Mar], [Month].[Apr], [Month].[May], [Month].[Jun], [Month].[Jul], [Month].[Aug], [Month].[Sep], [Month].[Oct], [Month].[Nov], [Month].[Dec]} ON 0, NON EMPTY {TM1FilterByLevel({TM1SubsetAll([Product])}, 0)} ON 1 FROM [Sales_Forecast] WHERE ([Region].[Total Region])"
+    }
+  ],
+  "seed_data": {
+    "method": "bulk",
+    "cellset": {
+      "('Laptop','North','Jan')": 1000,
+      "('Laptop','North','Feb')": 1100,
+      "('Laptop','North','Mar')": 1200,
+      "('Laptop','North','Apr')": 1150,
+      "('Laptop','North','May')": 1250,
+      "('Laptop','North','Jun')": 1300,
+      "('Laptop','North','Jul')": 1350,
+      "('Laptop','North','Aug')": 1400,
+      "('Laptop','North','Sep')": 1300,
+      "('Laptop','North','Oct')": 1250,
+      "('Laptop','North','Nov')": 1200,
+      "('Laptop','North','Dec')": 1500,
+      "('Laptop','South','Jan')": 900,
+      "('Laptop','South','Feb')": 950,
+      "('Laptop','South','Mar')": 1000,
+      "('Laptop','East','Jan')": 800,
+      "('Laptop','East','Feb')": 850,
+      "('Laptop','East','Mar')": 900,
+      "('Laptop','West','Jan')": 750,
+      "('Laptop','West','Feb')": 800,
+      "('Laptop','West','Mar')": 850,
+      "('Phone','North','Jan')": 2000,
+      "('Phone','North','Feb')": 2100,
+      "('Phone','North','Mar')": 2200,
+      "('Phone','South','Jan')": 1800,
+      "('Phone','South','Feb')": 1900,
+      "('Phone','East','Jan')": 1700,
+      "('Phone','East','Feb')": 1750,
+      "('Phone','West','Jan')": 1600,
+      "('Phone','West','Feb')": 1650,
+      "('Tablet','North','Jan')": 600,
+      "('Tablet','North','Feb')": 650,
+      "('Tablet','South','Jan')": 550,
+      "('Tablet','East','Jan')": 500,
+      "('Tablet','West','Jan')": 480,
+      "('TV','North','Jan')": 400,
+      "('TV','South','Jan')": 380,
+      "('TV','East','Jan')": 350,
+      "('TV','West','Jan')": 320,
+      "('T-Shirt','North','Jan')": 3000,
+      "('T-Shirt','North','Feb')": 3200,
+      "('T-Shirt','South','Jan')": 2800,
+      "('T-Shirt','East','Jan')": 2600,
+      "('T-Shirt','West','Jan')": 2400,
+      "('Jeans','North','Jan')": 1500,
+      "('Jeans','South','Jan')": 1400,
+      "('Jeans','East','Jan')": 1300,
+      "('Jeans','West','Jan')": 1200,
+      "('Jacket','North','Jan')": 800,
+      "('Jacket','South','Jan')": 750,
+      "('Jacket','East','Jan')": 700,
+      "('Jacket','West','Jan')": 650,
+      "('Sneakers','North','Jan')": 1200,
+      "('Sneakers','South','Jan')": 1100,
+      "('Sneakers','East','Jan')": 1050,
+      "('Sneakers','West','Jan')": 1000
+    }
+  },
+  "verify": {
+    "expected_dimensions": ["Product", "Region", "Month"],
+    "check_has_data": true
+  }
+}

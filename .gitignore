@@ -29,9 +29,8 @@ docs/
 # Agent memory (private, per-user)
 .claude/agent-memory/
 
-# Delivery artifacts (synced once, local changes not tracked)
-models/
-processes/
+# APQ Logging model specs (instance-specific)
+models/APQ_Logging/
 
 # OS
 Thumbs.db
