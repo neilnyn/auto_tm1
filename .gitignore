@@ -32,6 +32,13 @@ docs/
 # APQ Logging model specs (instance-specific)
 models/APQ_Logging/
 
+# Delivery artifacts — tracked for initial sync only, local changes ignored
+# (use --assume-unchanged on existing tracked files)
+models/**/*
+!models/.gitkeep
+processes/**/*
+!processes/.gitkeep
+
 # OS
 Thumbs.db
 .DS_Store
