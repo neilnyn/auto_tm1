@@ -23,6 +23,9 @@ config/tm1py_config.ini
 .claude/settings.json
 .claude/settings.local.json
 
+# Docs (local working documents)
+docs/
+
 # OS
 Thumbs.db
 .DS_Store
