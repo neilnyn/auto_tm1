@@ -47,5 +47,11 @@
   "subsets": [
     {"name": "Leaves", "type": "dynamic", "expression": "{TM1FilterByLevel({TM1SubsetAll([Account])}, 0)}"},
     {"name": "P&L", "type": "static", "elements": ["Revenue", "Expense"]}
-  ]
+  ],
+  "_dynamic_mdx_hints": {
+    "_comment": "Common TM1 MDX patterns for dynamic subsets — use in the expression field",
+    "all_leaf_elements": "{TM1FilterByLevel({TM1SubsetAll([DimName])}, 0)}",
+    "drilldown_from_parent": "{TM1DrilldownMember({[DimName].[Parent]}, ALL, RECURSIVE)}",
+    "top_N_by_value": "{Head(OrderBy({TM1FilterByLevel({TM1SubsetAll([DimName])}, 0)}, [CubeName].([Dim].[Elem]), BDESC), N)}"
+  }
 }

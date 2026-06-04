@@ -1,0 +1,18 @@
+{
+  "enabledPlugins": {
+    "agent-skills@addy-agent-skills": false
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__tm1__create_dimension|mcp__tm1__create_dimension_file|mcp__tm1__create_cube|mcp__tm1__create_subset|mcp__tm1__create_view|mcp__tm1__write_bulk|mcp__tm1__write_cell|mcp__tm1__write_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".venv/Scripts/python.exe hooks/spec_review_gate.py"
+          }
+        ]
+      }
+    ]
+  }
+}

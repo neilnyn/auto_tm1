@@ -33,6 +33,15 @@ models/                          ← tm1-model-builder 的 delivery 和 datasour
 
 Explore the existing TM1 model using read-only MCP tools. Use subagent (`tm1-explorer`) for multi-step exploration.
 
+#### 使用 subagent 注意事项
+
+- 如果 `tm1-explorer` subagent 返回了 error message，请向用户报告，不要让 subagent 自行修复
+
+#### 探索效率原则
+
+- **精确优先** — 用户已提供精确名称时，直接 `get_cube` / `get_dimension_info`，不要先用 `list_*` 模糊搜索
+- **信息充分即停** — 已获取的信息足以完成 spec 设计时，立即停止探索。典型充分条件：Dimension 的元素结构和层级关系、Cube 的维度顺序、已有 Subset / View 结构
+
 Clarify with the user:
 - What to build (dimensions, cubes, data, or full model)
 - Source of truth (spec file, user description, existing model to replicate)
@@ -73,9 +82,23 @@ models/<model_summary>/
 
 **Step 2** — 自检：确认所有 spec 文件都位于 `models/<model_summary>/` 目录下。如果发现文件被写到了其他位置，立即移动到正确位置。
 
-#### Human-in-the-loop 检查点（must-have）
+#### Human-in-the-loop 检查点（由 hook 强制执行）
 
-将 `models/<model_summary>/` 下的所有 spec 文件展示给用户审查。用户可能要求修改 spec 内容。修改完成后再次确认，然后进入 Build 阶段。
+本项目配置了 `spec_review_gate` hook（`scripts/hooks/spec_review_gate.py`），会在以下 MCP 写入工具被调用时自动检查：
+`create_dimension_file`, `create_dimension`, `create_cube`, `create_subset`, `create_view`, `write_bulk`, `write_cell`, `write_file`
+
+**执行流程（严格按顺序）：**
+
+1. **展示 spec 文件** — 调用 `AskUserQuestion`，将 `models/<model_summary>/` 下所有 spec 文件的核心内容展示给用户，询问："以上 spec 文件是否正确？是否需要修改？"
+2. **等待用户确认** — 用户确认无误后
+3. **创建审查标记** — 在 `models/<model_summary>/` 下创建空的 `.reviewed` 文件：
+   ```bash
+   touch models/<model_summary>/.reviewed
+   ```
+   这会解除 hook 对 MCP 写入工具的拦截
+4. **进入 Build 阶段**
+
+**重要**：如果不完成步骤 1-3 直接调用 MCP 写入工具，hook 会硬拦截并返回错误消息。spec 文件被修改后（时间戳比 `.reviewed` 新），hook 会重新拦截，需要再次走审查流程。
 
 ### Phase 3: Build（基于 spec 文件执行）
 
@@ -106,13 +129,6 @@ find_cubes_by_dimension(instance=..., dimension_name="TargetDim")
 get_cube_rules(instance=..., cube_name="AffectedCube")
 # Check if rules reference elements being changed
 ```
-
-For ragged hierarchies: same as balanced — just skip edges for branches that don't go as deep.
-
-For dynamic subsets, use TM1-specific MDX functions:
-- All leaf elements: `{TM1FilterByLevel({TM1SubsetAll([DimName])}, 0)}`
-- Drill down from a parent: `{TM1DrilldownMember({[DimName].[Parent]}, ALL, RECURSIVE)}`
-- Top N by value: `{Head(OrderBy({TM1FilterByLevel({TM1SubsetAll([DimName])}, 0)}, [CubeName].([Dim].[Elem]), BDESC), N)}`
 
 ### Phase 4: Verify（must-have）
 
@@ -157,7 +173,6 @@ If TI business logic is needed, summarize what was built and hand off to `tm1-pr
 3. **Transition**: Tell the user to invoke the process-writer skill:
    > "Model structure is ready. To build the TI process for [description], please use the `tm1-process-writer` skill. The summary above provides all the context needed."
 
-4. **Context continuity**: The hand-off summary should be included in the user's next message when invoking `tm1-process-writer`, so the next skill session has full context without re-exploring.
 
 ## Key Rules
 
