@@ -42,3 +42,13 @@ Claude Code  ←stdio→  tm1_mcp_server/tm1_mcp_tool.py  (FastMCP tool definiti
 - **Windows environment** — use forward slashes in paths within bash, backslashes may appear in Python paths
 - **Python runtime**: Use `.venv/Scripts/python.exe` when running Python commands
 - **Plan agent skill 传递**: 当通过 Agent tool 委派 Plan subagent 时，必须在 prompt 中主动携带相关 skill 信息（skill 名称、触发条件、适用场景），因为 subagent 无法看到父对话中 system-reminder 里的 skill 描述。具体做法：在委派 prompt 中加入"Available skills"段落，列出与当前任务相关的 skill 名称、用途和触发短语，以便 Plan agent 在规划中正确引用 skill 并按 skill 能力边界拆分任务步骤。
+- **cc-workon（spec-driven 工作流必须）**: 本项目使用 spec-driven 工作流，所有 TM1 MCP 写入/破坏性工具都受 hook 拦截（`hooks/spec_review_gate.py`）。**在开始处理任何 TM1 项目开发前，必须先注册当前工作项目**，执行以下命令：
+  ```
+  : cc-workon models/<model_summary>
+  : cc-workon processes/<process_name>
+  ```
+  这个命令会通过 hook 将当前 session 与目标项目目录绑定。未注册时，所有 MCP 写入工具都会被阻塞。注册后，hook 仅对你绑定的项目目录进行 spec 审查（多 session 开发时互不干扰）。详细规则：
+  - 注册后 hook 会检查项目目录内的 spec 文件和 `.reviewed` 标记
+  - spec 文件必须经过用户审查，审查通过后在项目目录创建 `.reviewed` 标记
+  - 如为临时/improvising 操作，经用户确认后创建 `.spec_bypass` 标记
+  - 只读 MCP 工具（get_*, list_*, verify_*, execute_mdx 等）不受任何限制

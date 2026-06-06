@@ -65,6 +65,12 @@ Read the spec templates for reference:
 
 用户确认方案后，按以下步骤生成 dimension和cube的spec 文件：
 
+**Step 0 — 注册工作项目**（必须先于一切 MCP 写入操作）：
+```bash
+: cc-workon models/<model_summary>
+```
+这会通过 hook 将当前 session 与 `models/<model_summary>` 绑定。未注册时所有 MCP 写入工具都会被阻塞。
+
 **Step 1** `models/<model_summary>/` - 这是 spec 文件的**唯一交付位置**。不要将 spec 文件写到项目根目录、outputs/、或其他任何位置,生成 spec JSON 文件到 `models/<model_summary>/` 下：
 
 ```
@@ -84,8 +90,7 @@ models/<model_summary>/
 
 #### Human-in-the-loop 检查点（由 hook 强制执行）
 
-本项目配置了 `spec_review_gate` hook（`scripts/hooks/spec_review_gate.py`），会在以下 MCP 写入工具被调用时自动检查：
-`create_dimension_file`, `create_dimension`, `create_cube`, `create_subset`, `create_view`, `write_bulk`, `write_cell`, `write_file`
+本项目配置了 `spec_review_gate` hook（`hooks/spec_review_gate.py`），会在 MCP 写入工具被调用时自动检查当前 session 通过 `cc-workon` 绑定的项目目录。
 
 **执行流程（严格按顺序）：**
 

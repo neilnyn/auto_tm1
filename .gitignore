@@ -31,6 +31,9 @@ docs/
 # Agent memory (private, per-user)
 .claude/agent-memory/
 
+# Hook session state (temporary, per-session)
+hooks/sessions.json
+
 # APQ Logging model specs (instance-specific)
 models/APQ_Logging/
 

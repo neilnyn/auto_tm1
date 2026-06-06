@@ -5,7 +5,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__tm1__create_dimension|mcp__tm1__create_dimension_file|mcp__tm1__create_cube|mcp__tm1__create_subset|mcp__tm1__create_view|mcp__tm1__write_bulk|mcp__tm1__write_cell|mcp__tm1__write_file",
+        "matcher": "Bash|mcp__tm1__*",
         "hooks": [
           {
             "type": "command",

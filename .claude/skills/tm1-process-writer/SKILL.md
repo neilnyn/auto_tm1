@@ -107,12 +107,6 @@ description: >
      （完整代码消耗大量 token，仅在需要参考编码模式时使用 include_code=True）
    ```
 
-   **第三步（可选）：交叉引用**
-   ```
-   → find_cubes_by_dimension(instance="Neil", dimension_name="<dim_name>")
-   → execute_mdx(instance="Neil", mdx="SELECT ... FROM <cube> ...", top=10)
-   ```
-
    每次探索后将关键发现（Cube 维度顺序、Dimension 元素样本）整理展示给用户确认。
 
 3. **Human-in-the-loop 检查点 #1**：将你对需求的理解和 TM1 环境分析结果展示给用户，询问以下问题：
@@ -154,7 +148,13 @@ description: >
 
 ### 阶段 3：生成文件（must-have）
 
-根据设计，在用户指定的目录下（默认为项目根目录 `processes/<process_name>/`），按 `.claude/skills/tm1-process-writer/templates/` 模板的格式，生成以下 7 个文件：
+根据设计，在用户指定的目录下（默认为项目根目录 `processes/<process_name>/`），按 `.claude/skills/tm1-process-writer/templates/` 模板的格式，生成以下 7 个文件。
+
+**在生成文件之前，必须先注册工作项目：**
+```bash
+: cc-workon processes/<process_name>
+```
+这会通过 hook 将当前 session 与 `processes/<process_name>` 绑定。未注册时所有 MCP 写入工具都会被阻塞。
 
 | 文件 | 说明 |
 |------|------|
@@ -194,9 +194,23 @@ Reviewer 会读取 `coding-conventions.md` 和 `ti-functions.md` 作为审查标
 
 根据审查结果修正代码，然后进入 Human-in-the-loop 检查点。
 
-### 阶段 5：Human-in-the-loop 检查点（must-have）
+### 阶段 5：Human-in-the-loop 检查点（must-have，由 hook 强制执行）
 
-将生成的 7 个文件内容（已通过 ti-code-reviewer 审查）展示给用户审查。用户可能会要求修改。修改完成后再次确认。
+本项目配置了 `spec_review_gate` hook（`hooks/spec_review_gate.py`），会在 MCP 写入工具被调用时自动检查当前 session 通过 `cc-workon` 绑定的项目目录。
+
+**执行流程（严格按顺序）：**
+
+1. **自动化代码审查** — 启动 ti-code-reviewer subagent 审查生成的代码
+2. **展示代码文件** — 根据审查结果修正代码后，调用 `AskUserQuestion`，将 `processes/<process_name>/` 下所有 7 个文件的核心内容展示给用户，询问："以上 TI Process 代码是否正确？是否需要修改？"
+3. **等待用户确认** — 用户确认无误后
+4. **创建审查标记** — 在 `processes/<process_name>/` 下创建空的 `.reviewed` 文件：
+   ```bash
+   touch processes/<process_name>/.reviewed
+   ```
+   这会解除 hook 对 `create_process` / `update_process` 的拦截
+5. **进入部署阶段**
+
+**重要**：如果不完成步骤 1-4 直接调用 `create_process` / `update_process`，hook 会硬拦截并返回错误消息。代码文件被修改后（时间戳比 `.reviewed` 新），hook 会重新拦截，需要再次走审查流程。
 
 ### 阶段 6：部署到 TM1 服务器
 
