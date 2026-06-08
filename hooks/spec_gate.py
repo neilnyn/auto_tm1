@@ -1,8 +1,10 @@
 """
-PreToolUse hook (matcher: mcp__tm1__*): spec review gate.
+PreToolUse hook (matcher: mcp__tm1__*): skill boundary + spec review gate.
 
-Verifies the session has a registered project with valid specs + .reviewed
-status before allowing MCP TM1 write/destructive tools.
+First enforces skill domain boundaries — model-builder tools cannot be used
+in process-writer sessions and vice versa. Then verifies the session has a
+registered project with valid specs + .reviewed status before allowing
+MCP TM1 write/destructive tools.
 
 Read-only TM1 tools pass through immediately (exit 0).
 Unrecognized TM1 tools are denied (exit 2).
@@ -17,6 +19,7 @@ import traceback
 from session_store import (
     get_active_project,
     block,
+    PROJECT_ROOT,
 )
 
 
@@ -38,8 +41,9 @@ READONLY_TOOLS = {
     "mcp__tm1__search_processes", "mcp__tm1__compile_process",
 }
 
-GATED_TOOLS = {
-    # Model building
+# ── Skill-boundary tool sets ──────────────────────────────────────────
+
+MODEL_SKILL_TOOLS = {
     "mcp__tm1__create_dimension", "mcp__tm1__create_dimension_file",
     "mcp__tm1__add_elements", "mcp__tm1__add_elements_file",
     "mcp__tm1__create_cube",
@@ -49,20 +53,81 @@ GATED_TOOLS = {
     "mcp__tm1__write_element_attributes", "mcp__tm1__write_element_attributes_file",
     "mcp__tm1__update_hierarchy", "mcp__tm1__update_hierarchy_file",
     "mcp__tm1__create_element_attribute",
-    # Process
+}
+
+PROCESS_SKILL_TOOLS = {
     "mcp__tm1__create_process", "mcp__tm1__update_process",
     "mcp__tm1__execute_process",
-    # Destructive
+}
+
+DESTRUCTIVE_TOOLS = {
     "mcp__tm1__delete_cube", "mcp__tm1__delete_dimension",
     "mcp__tm1__delete_elements", "mcp__tm1__delete_process",
     "mcp__tm1__delete_subset", "mcp__tm1__delete_view",
     "mcp__tm1__clear_cube",
 }
 
+GATED_TOOLS = MODEL_SKILL_TOOLS | PROCESS_SKILL_TOOLS | DESTRUCTIVE_TOOLS
+
 # ── Spec file patterns ────────────────────────────────────────────────
 
 MODEL_SPEC_PATTERNS = ["*_dimension-spec.json", "*_cube-spec.json"]
 PROCESS_SPEC_PATTERNS = ["*_prolog.ti", "*_data.ti"]
+
+
+# ── Skill boundary logic ──────────────────────────────────────────────
+
+
+def get_skill_domain(project_dir):
+    """Extract skill domain from the cc-workon registered project path.
+
+    Returns 'models' or 'processes', or None if indeterminate.
+    """
+    rel = os.path.relpath(project_dir, PROJECT_ROOT)
+    first = rel.split(os.sep)[0]
+    if first == "models":
+        return "models"
+    if first == "processes":
+        return "processes"
+    return None
+
+
+def check_skill_boundary(tool_name, project_dir):
+    """Block if tool doesn't match the session's registered skill domain.
+
+    .spec_bypass overrides this check (improvising mode).
+    """
+    # Bypass skips boundary enforcement too
+    if os.path.exists(os.path.join(project_dir, ".spec_bypass")):
+        return  # improvising mode — allow cross-domain
+
+    domain = get_skill_domain(project_dir)
+    if domain is None:
+        return  # can't determine domain, don't block
+
+    project_name = os.path.basename(project_dir)
+
+    if domain == "models" and tool_name in PROCESS_SKILL_TOOLS:
+        block(
+            f"SKILL BOUNDARY: Cannot use '{tool_name}' while bound to "
+            f"model-builder project (models/{project_name}).\n\n"
+            "This tool belongs to tm1-process-writer. To proceed:\n"
+            "  1. Complete current model-builder work (Phase 5 hand-off)\n"
+            "  2. Generate a 'Model Build Summary for TI Development'\n"
+            "  3. End this session, then invoke tm1-process-writer with "
+            "the summary\n\n"
+            "Do NOT write TI code in the model-builder session."
+        )
+
+    if domain == "processes" and tool_name in MODEL_SKILL_TOOLS:
+        block(
+            f"SKILL BOUNDARY: Cannot use '{tool_name}' while bound to "
+            f"process-writer project (processes/{project_name}).\n\n"
+            "This tool belongs to tm1-model-builder. To proceed:\n"
+            "  1. Complete current process-writer work\n"
+            "  2. End this session, then invoke tm1-model-builder\n\n"
+            "Do NOT modify model structure from the process-writer session."
+        )
 
 
 # ── Spec gate logic ───────────────────────────────────────────────────
@@ -168,6 +233,8 @@ def main():
                     "Example: : cc-workon models/Sales_Planning\n"
                     "This registers the current session's working project."
                 )
+
+            check_skill_boundary(tool_name, project_dir)
 
             check_spec_gate(project_dir)
             # If we reach here, all checks passed -> ALLOW

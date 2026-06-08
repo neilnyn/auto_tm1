@@ -16,63 +16,72 @@ description: >
 ## 工作目录约定
 
 ```
-models/                          ← tm1-model-builder 的 delivery 和 datasource 根目录
-├── <model_summary>/             ← 当前开发模型的子目录（名称为模型简要描述，如 "Sales_Planning"）
-│   ├── Account_dimension-spec.json    ← 维度 spec（供用户审查 + create_dimension_file 数据源）
+models/                          ← spec 文件交付根目录
+├── <model_summary>/             ← 当前模型子目录（如 "Sales_Planning"）
+│   ├── Account_dimension-spec.json    ← 维度 spec（供审查 + create_dimension_file 输入）
 │   ├── Period_dimension-spec.json
-│   └── Sales_Cube_cube-spec.json      ← Cube spec（供用户审查）
+│   └── Sales_Cube_cube-spec.json      ← Cube spec（供审查）
 ```
 
-- `models/` 是项目根目录下的固定目录，所有模型的 spec 文件都在此交付
-- `<model_summary>` 是一个简短的、能描述当前模型用途的目录名（英文、下划线分隔），在 Phase 2 中与用户确认
-- spec 文件既供用户审查（Human-in-the-loop），也作为 MCP 工具（如 `create_dimension_file`）的数据源
+- `models/` 是项目根目录下的固定目录，所有 spec 文件在此交付
+- `<model_summary>` 是简短的子目录名，在 Phase 1 中与用户确认
+- spec 文件既是 Human-in-the-loop 审查对象，也是 MCP 工具的数据源输入
 
 ## Workflow
 
 ### Phase 1: Understand
 
-Explore the existing TM1 model using read-only MCP tools. Use subagent (`tm1-explorer`) for multi-step exploration.
-
-#### 使用 subagent 注意事项
-
-- 如果 `tm1-explorer` subagent 返回了 error message，请向用户报告，不要让 subagent 自行修复
-
-#### 探索效率原则
-
-- **精确优先** — 用户已提供精确名称时，直接 `get_cube` / `get_dimension_info`，不要先用 `list_*` 模糊搜索
-- **信息充分即停** — 已获取的信息足以完成 spec 设计时，立即停止探索。典型充分条件：Dimension 的元素结构和层级关系、Cube 的维度顺序、已有 Subset / View 结构
+**1. 明确构建目标**
 
 Clarify with the user:
-- What to build (dimensions, cubes, data, or full model)
-- Source of truth (spec file, user description, existing model to replicate)
-- Verification criteria
+- 要建什么（dimensions、cubes、data、还是完整模型）
+- 数据来源（spec 文件、用户描述、复用已有模型）
 - **Model summary name** — 用于 `models/` 下的子目录名（如 `Sales_Planning`、`HR_Budget`）
+
+**2. 自评估探索需求**
+
+在调用任何 MCP 探索工具之前，先问自己：
+
+> **"基于当前已知信息，我能否直接设计出完整的 spec 文件？"**
+
+- 如果**能** → 跳过探索，直接进入 Phase 2
+- 如果**不能** → 列出你具体缺少什么信息才能完成设计，然后用最少的 MCP 调用去获取。每获取一项后重新评估：现在能设计了吗？
+
+常见的设计必要信息（仅供参考，按需获取）：
+- Dimension 的元素结构和层级关系
+- Cube 的维度顺序
+- 已有 Subset / View 结构（如果是在现有模型上扩展）
+- 已有元素的属性值（如果新 spec 需要兼容）
+
+**3. 探索执行方式**
+
+- **1-2 个精确查询**：直接调用 MCP 工具（如 `get_cube`、`get_dimension_info`）
+- **3+ 个连续查询**：委托 `tm1-explorer` subagent（`Agent(subagent_type="tm1-explorer")`）
+- 如果 tm1-explorer 返回 error → 标记出来让用户处理，不要让 subagent 自行修复
 
 ### Phase 2: Spec（设计 + 交付 spec 文件）
 
+**1. 展示构建方案**
+
 Present a build plan:
-1. Dimensions to create (elements, hierarchies, attributes, subsets)
-2. Cubes to create (dimension order)
-3. Views to create (MDX queries)
-4. Data to write (source and method)
-5. Verification checkpoints
+- Dimensions to create (elements, hierarchies, attributes, subsets)
+- Cubes to create (dimension order)
+- Views to create (MDX queries)
+- Data to write (source and method)
+- Verification checkpoints
 
 Read the spec templates for reference:
-- `.claude/skills/tm1-model-builder/templates/dimension-spec.json` — dimension structure schema (elements, edges, attributes, subsets)
-- `.claude/skills/tm1-model-builder/templates/cube-spec.json` — cube structure schema (dimensions, views, seed data, verify)
+- `.claude/skills/tm1-model-builder/templates/dimension-spec.json` — dimension 结构 schema
+- `.claude/skills/tm1-model-builder/templates/cube-spec.json` — cube 结构 schema
 
-#### 交付 spec 文件（must-have）
-
-用户确认方案后，按以下步骤生成 dimension和cube的spec 文件：
-
-**Step 0 — 注册工作项目**（创建 `models/<model_summary>` 目录,先于一切 MCP 写入操作）：
+**2. 注册工作项目**（先于一切 MCP 写入操作）：
 ```bash
 : cc-workon models/<model_summary>
 ```
-这会通过 hook 将当前 session 与 `models/<model_summary>` 绑定。未注册时所有 MCP 写入工具都会被阻塞。
 
-**Step 1** `models/<model_summary>/` - 这是 spec 文件的**唯一交付位置**。不要将 spec 文件写到项目根目录、outputs/、或其他任何位置,生成 spec JSON 文件到 `models/<model_summary>/` 下：
+**3. 生成 spec 文件**
 
+在 `models/<model_summary>/` 下生成 spec JSON 文件：
 ```
 models/<model_summary>/
 ├── <dimension_name>_dimension-spec.json     ← 每个维度一个文件
@@ -80,104 +89,76 @@ models/<model_summary>/
 └── <cube_name>_cube-spec.json               ← 每个 Cube 一个文件
 ```
 
-文件命名规则：
-- 维度：`<dimension_name>_dimension-spec.json`（如 `Account_dimension-spec.json`）
-- Cube：`<cube_name>_cube-spec.json`（如 `Sales_Cube_cube-spec.json`）
-
 每个 spec 文件必须严格遵循对应模板的结构（包含 `_spec_to_mcp_mapping` 字段），因为这些文件将直接作为 MCP 工具的输入。
 
-**Step 2** — 自检：确认所有 spec 文件都位于 `models/<model_summary>/` 目录下。如果发现文件被写到了其他位置，立即移动到正确位置。
+**4. 自检**：确认所有 spec 文件都位于 `models/<model_summary>/` 目录下。
 
-#### Human-in-the-loop 检查点（由 hook 强制执行）
+**5. Human-in-the-loop 审查（由 spec_gate hook 强制执行）**
 
-本项目配置了 `spec_review_gate` hook（`hooks/spec_review_gate.py`），会在 MCP 写入工具被调用时自动检查当前 session 通过 `cc-workon` 绑定的项目目录。
+本项目配置了 `spec_gate` hook，所有 MCP 写入工具需要 session 绑定和审查标记。
 
-**执行流程（严格按顺序）：**
+流程：
+1. 展示 spec 文件 → 调用 `AskUserQuestion` 展示所有文件内容，询问是否正确
+2. 用户确认后 → 创建审查标记：`touch models/<model_summary>/.reviewed`
+3. 进入 Build 阶段
 
-1. **展示 spec 文件** — 调用 `AskUserQuestion`，将 `models/<model_summary>/` 下所有 spec 文件的核心内容展示给用户，询问："以上 spec 文件是否正确？是否需要修改？"
-2. **等待用户确认** — 用户确认无误后
-3. **创建审查标记** — 在 `models/<model_summary>/` 下创建空的 `.reviewed` 文件：
-   ```bash
-   touch models/<model_summary>/.reviewed
-   ```
-   这会解除 hook 对 MCP 写入工具的拦截
-4. **进入 Build 阶段**
-
-**重要**：如果不完成步骤 1-3 直接调用 MCP 写入工具，hook 会硬拦截并返回错误消息。spec 文件被修改后（时间戳比 `.reviewed` 新），hook 会重新拦截，需要再次走审查流程。
+未完成步骤 1-2 直接调用 MCP 写入工具会被 hook 拦截。spec 文件被修改后（时间戳比 `.reviewed` 新）需重新审查。
 
 ### Phase 3: Build（基于 spec 文件执行）
 
 Execute in dependency order: **dimensions → subsets → cubes → views → data**
 
-#### 从 spec 文件构建
-
 **优先使用 `create_dimension_file` 工具**，直接传入 spec 文件的项目相对路径：
-
 ```
-create_dimension_file(
-    instance="Neil",
-    file_path="models/Sales_Planning/Account_dimension-spec.json"
-)
+create_dimension_file(instance="Neil", file_path="models/Sales_Planning/Account_dimension-spec.json")
 ```
 
-这样做的好处：
-- spec 文件作为单一数据源（spec 即是交付物，也是 MCP 工具输入）
-- 避免在 MCP 工具调用中内联大量 JSON（payload 体积无限制）
-- 用户可以脱离 Claude Code 直接修改 spec 文件后重新部署
+这样做的好处：spec 文件是单一数据源（既供审查也供部署）、避免内联大 JSON、用户可脱离 Claude Code 直接修改 spec 后重新部署。
 
-对于 Cube spec，按 `_spec_to_mcp_mapping.execution_order` 中的步骤，使用对应的 MCP 工具逐步执行（`create_cube` → `create_view` → `write_bulk`/`write_cell` → `verify_cube`）。
+对于 Cube spec，按 `_spec_to_mcp_mapping.execution_order` 中的步骤，使用对应 MCP 工具逐步执行（`create_cube` → `create_view` → `write_bulk`/`write_cell` → `verify_cube`）。
 
 Before modifying existing dimensions, run impact analysis:
 ```
 find_cubes_by_dimension(instance=..., dimension_name="TargetDim")
-# Check which cubes will be affected
 get_cube_rules(instance=..., cube_name="AffectedCube")
-# Check if rules reference elements being changed
 ```
 
-### Phase 4: Verify（must-have）
+### Phase 4: Verify
 
 After each major phase, run verification tools:
 - `verify_dimension` — element counts, hierarchy integrity, attribute coverage
 - `verify_cube` — dimension order, existence, data presence
 
-Surface discrepancies immediately. Do not proceed to the next phase if verification fails.
+Surface discrepancies immediately. Do not proceed if verification fails.
 
 ### Phase 5: Hand off
 
-If TI business logic is needed, summarize what was built and hand off to `tm1-process-writer` skill.
+If TI business logic is needed, generate a hand-off summary for `tm1-process-writer` skill:
 
-#### Hand-off Protocol
+```
+## Model Build Summary for TI Development
 
-1. **Generate a hand-off summary** using this template (present to user and confirm):
-   ```
-   ## Model Build Summary for TI Development
+### Model Spec Files
+- models/<model_summary>/ — 所有 spec 文件所在目录
 
-   ### Model Spec Files
-   - models/<model_summary>/ — 所有 spec 文件所在目录
+### Cubes Built
+- [CubeName]: dimensions = [Dim1, Dim2, ...], rules = (none / existing rules text)
 
-   ### Cubes Built
-   - [CubeName]: dimensions = [Dim1, Dim2, ...], rules = (none / existing rules text)
+### Seed Data Written
+- [CubeName]: brief description of data written
 
-   ### Seed Data Written
-   - [CubeName]: an introduction of the data written via write_bulk/write_file
+### What TI Should Automate
+- [Description of recurring data loads, dimension updates, or calculations needed]
 
-   ### What TI Should Automate
-   - [Description of recurring data loads, dimension updates, or calculations needed]
+### TM1 Instance
+- Instance: [instance name used during build]
+```
 
-   ### TM1 Instance
-   - Instance: [instance name used during build]
-   ```
-
-2. **User confirms** the summary is correct and describes the TI requirements.
-
-3. **Transition**: Tell the user to invoke the process-writer skill:
-   > "Model structure is ready. To build the TI process for [description], please use the `tm1-process-writer` skill. The summary above provides all the context needed."
-
+Present to user for confirmation, then tell them to invoke `tm1-process-writer` skill with this summary.
 
 ## Key Rules
 
-- **spec 文件是单一数据源** — `models/<model_summary>/` 下的 spec JSON 文件既是交付物（供审查），也是 MCP 工具的输入数据源。始终优先使用 `create_dimension_file(file_path=...)` 而非内联 JSON
+- **spec 文件是单一数据源** — 始终优先使用 `create_dimension_file(file_path=...)` 而非内联 JSON
 - `create_dimension` accepts elements and edges in one call — prefer this over creating empty dimension then adding elements separately（当不使用 spec 文件时）
 - All delete/clear tools carry `destructiveHint` — Claude Code will prompt for confirmation automatically
-- Spec 文件路径使用**项目相对路径**（如 `models/Sales_Planning/Account_dimension-spec.json`），MCP 工具的 `file_path` 参数接受这种格式
+- Spec 文件路径使用**项目相对路径**（如 `models/Sales_Planning/Account_dimension-spec.json`）
