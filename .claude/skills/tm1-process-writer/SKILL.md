@@ -125,7 +125,7 @@ Clarify with the user：
 代码生成后，启动 ti-code-reviewer subagent 审查：
 
 ```
-Agent(subagent_type="ti-code-reviewer", prompt="Review the TI Process code in processes/<process_name>/. Target cube dimension order: [Dim1, Dim2, ...].")
+Agent(subagent_type="ti-code-reviewer", prompt="Review the TI Process code in processes/<process_name>/. review prolog, metadata, data, epilog tabs.")
 ```
 
 Reviewer 会以 `coding-conventions.md` 和 `ti-functions.md` 为标准审查四个 Tab、参数和变量。根据审查结果修正代码。
@@ -167,4 +167,3 @@ Reviewer 会以 `coding-conventions.md` 和 `ti-functions.md` 为标准审查四
 - TI 脚本在服务器端执行，不要使用本地系统命令
 - TI 函数名区分大小写，与 `ti-functions.md` 中的拼写一致
 - CellPut 系列函数的维度顺序必须与 Cube 定义一致
-- TM1py API 配置含敏感凭证，不要在代码注释或日志中输出

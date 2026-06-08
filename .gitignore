@@ -29,7 +29,8 @@ tests/temp.ipynb
 docs/
 
 # Agent memory (private, per-user)
-.claude/agent-memory/
+.claude/agent-memory/tm1-explorer/*
+!.claude/agent-memory/tm1-explorer/.gitkeep
 
 # Hook session state (temporary, per-session)
 hooks/sessions.json
