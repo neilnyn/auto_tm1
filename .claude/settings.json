@@ -5,11 +5,30 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|mcp__tm1__*",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": ".venv/Scripts/python.exe hooks/spec_review_gate.py"
+            "command": ".venv/Scripts/python.exe hooks/cc_workon.py"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__tm1__*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".venv/Scripts/python.exe hooks/spec_gate.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".venv/Scripts/python.exe hooks/session_cleanup.py"
           }
         ]
       }

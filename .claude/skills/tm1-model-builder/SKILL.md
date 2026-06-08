@@ -65,7 +65,7 @@ Read the spec templates for reference:
 
 用户确认方案后，按以下步骤生成 dimension和cube的spec 文件：
 
-**Step 0 — 注册工作项目**（必须先于一切 MCP 写入操作）：
+**Step 0 — 注册工作项目**（创建 `models/<model_summary>` 目录,先于一切 MCP 写入操作）：
 ```bash
 : cc-workon models/<model_summary>
 ```
@@ -159,12 +159,8 @@ If TI business logic is needed, summarize what was built and hand off to `tm1-pr
    ### Cubes Built
    - [CubeName]: dimensions = [Dim1, Dim2, ...], rules = (none / existing rules text)
 
-   ### Subsets Created
-   - [DimName].[SubsetName] (static/dynamic): purpose
-   - ...
-
    ### Seed Data Written
-   - [CubeName]: N cells via write_bulk
+   - [CubeName]: an introduction of the data written via write_bulk/write_file
 
    ### What TI Should Automate
    - [Description of recurring data loads, dimension updates, or calculations needed]
