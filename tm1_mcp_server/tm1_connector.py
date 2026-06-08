@@ -939,12 +939,15 @@ class TM1Manager:
         hierarchy_name: str | None = None,
         private: bool = False,
     ) -> dict[str, Any]:
-        """Get subset details including type (static/dynamic) and MDX expression."""
-        hier = hierarchy_name or self.service.dimensions.hierarchies.get_all_names(
-            dimension_name
-        )[0]
+        """Get subset details. Resolves dynamic subsets to actual element names."""
+        hier = self._resolve_hierarchy(dimension_name, hierarchy_name)
         s = self.service.dimensions.subsets.get(
             subset_name, dimension_name, hierarchy_name=hier, private=private
+        )
+        # Resolve both static and dynamic subsets to concrete element names.
+        # For dynamic subsets, this executes the MDX expression server-side.
+        resolved_elements = self.service.dimensions.subsets.get_element_names(
+            dimension_name, hier, subset=subset_name, private=private
         )
         result: dict[str, Any] = {
             "name": s.name,
@@ -952,8 +955,8 @@ class TM1Manager:
             "hierarchy": hier,
             "private": private,
             "subset_type": "dynamic" if s.is_dynamic else "static",
-            "element_count": len(s.elements) if s.elements else 0,
-            "elements": s.elements if s.elements else [],
+            "element_count": len(resolved_elements),
+            "elements": resolved_elements,
         }
         if s.is_dynamic:
             result["expression"] = s.expression
