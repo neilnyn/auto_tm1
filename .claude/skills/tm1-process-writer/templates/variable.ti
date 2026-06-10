@@ -1,9 +1,0 @@
-#
-# TI Process 变量定义
-# 格式: VariableName, VariableType
-# VariableType: String 或 Numeric
-#
-
-V1, String
-V2, String
-# 根据需要添加更多变量

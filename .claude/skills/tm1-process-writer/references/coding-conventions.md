@@ -397,7 +397,7 @@ ExecuteProcess('}bedrock.cube.view.create',
    'pFilter', sFilter,
    'pSuppressZero', 1,
    'pSuppressConsol', 1,
-   'pSuppressRules', 0,
+   'pSuppressRules', 1,
    'pDimDelim', cDelimDim,
    'pEleStartDelim', cDelimElemStart,
    'pEleDelim', cDelimElement,
@@ -433,8 +433,8 @@ ViewSubsetAssign(cCubSrc, cView, sDim, cSubClr);
 ### 7.6 View 提取设置
 
 ```ti
-ViewExtractSkipCalcsSet(cCubSrc, cView, 0);       # 不跳过聚合节点
-ViewExtractSkipRuleValuesSet(cCubSrc, cView, 0);   # 不跳过规则计算值
+ViewExtractSkipCalcsSet(cCubSrc, cView, 1);       # 跳过聚合节点
+ViewExtractSkipRuleValuesSet(cCubSrc, cView, 1);   # 跳过规则计算值
 ViewExtractSkipZeroesSet(cCubSrc, cView, 1);       # 跳过零值
 ```
 

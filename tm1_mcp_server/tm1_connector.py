@@ -35,6 +35,19 @@ def _resolve_spec_path(file_path: str) -> Path:
     return p
 
 
+def _resolve_process_dir(file_path: str) -> tuple[Path, str]:
+    """Resolve a process directory path and extract process_name from directory name."""
+    p = Path(file_path)
+    if not p.is_absolute():
+        p = _PROJECT_ROOT / p
+    if not p.exists():
+        raise TM1OperationError(f"Process directory not found: {p}")
+    if not p.is_dir():
+        raise TM1OperationError(f"Expected a directory, got file: {p}")
+    process_name = p.name
+    return p, process_name
+
+
 def _children_map(parents_map: dict[str, list[str]]) -> dict[str, list[str]]:
     """Build parent→children dict from child→parents dict."""
     cm: dict[str, list[str]] = {}
@@ -1394,6 +1407,99 @@ class TM1Manager:
         self.service.processes.update(p)
         logger.info(f"Updated process '{process_name}'")
         return {"success": True, "process_name": process_name}
+
+    @_tm1_api("create process from file")
+    def create_process_from_file(self, file_path: str) -> dict[str, Any]:
+        """Create a TI process from a directory of spec files.
+
+        Reads the standard 7-file bundle from the given directory path.
+        Missing code files default to empty string; missing metadata files
+        (parameters, variables, datasource) default to None/"None".
+        """
+        p, process_name = _resolve_process_dir(file_path)
+        prefix = f"{process_name}_"
+        files_read: list[str] = []
+
+        def _read_text(suffix: str) -> str:
+            fp = p / f"{prefix}{suffix}"
+            if fp.exists():
+                files_read.append(fp.name)
+                return fp.read_text(encoding="utf-8")
+            return ""
+
+        def _read_json(suffix: str) -> Any:
+            fp = p / f"{prefix}{suffix}"
+            if fp.exists():
+                files_read.append(fp.name)
+                return json.loads(fp.read_text(encoding="utf-8"))
+            return None
+
+        prolog = _read_text("prolog.ti")
+        metadata = _read_text("metadata.ti")
+        data = _read_text("data.ti")
+        epilog = _read_text("epilog.ti")
+        parameters = _read_json("parameters.json")
+        variables = _read_json("variable.json")
+        ds = _read_json("datasource.json")
+        datasource_type = ds.get("datasource_type", "None") if ds else "None"
+
+        result = self.create_process(
+            process_name=process_name,
+            prolog=prolog,
+            metadata=metadata,
+            data=data,
+            epilog=epilog,
+            parameters=parameters,
+            variables=variables,
+            datasource_type=datasource_type,
+        )
+        result["files_read"] = files_read
+        return result
+
+    @_tm1_api("update process from file")
+    def update_process_from_file(self, file_path: str) -> dict[str, Any]:
+        """Update a TI process from a directory of spec files.
+
+        Only files present in the directory are updated; absent files mean
+        'keep unchanged' (None). Code files (.ti) and metadata files (.json)
+        are both optional per-tab.
+        """
+        p, process_name = _resolve_process_dir(file_path)
+        prefix = f"{process_name}_"
+        files_updated: list[str] = []
+
+        def _try_read_text(suffix: str) -> str | None:
+            fp = p / f"{prefix}{suffix}"
+            if fp.exists():
+                files_updated.append(fp.name)
+                return fp.read_text(encoding="utf-8")
+            return None
+
+        def _try_read_json(suffix: str) -> Any:
+            fp = p / f"{prefix}{suffix}"
+            if fp.exists():
+                files_updated.append(fp.name)
+                return json.loads(fp.read_text(encoding="utf-8"))
+            return None
+
+        prolog = _try_read_text("prolog.ti")
+        metadata_code = _try_read_text("metadata.ti")
+        data = _try_read_text("data.ti")
+        epilog = _try_read_text("epilog.ti")
+        parameters = _try_read_json("parameters.json")
+        variables = _try_read_json("variable.json")
+
+        result = self.update_process(
+            process_name=process_name,
+            prolog=prolog,
+            metadata=metadata_code,
+            data=data,
+            epilog=epilog,
+            parameters=parameters,
+            variables=variables,
+        )
+        result["files_updated"] = files_updated
+        return result
 
     @_tm1_api("delete process")
     def delete_process(self, process_name: str) -> dict[str, Any]:

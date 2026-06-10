@@ -107,7 +107,7 @@ Clarify with the user：
 |------|------|
 | `<process_name>_parameters.json` | 参数定义 |
 | `<process_name>_datasource.json` | 数据源类型声明（仅类型，具体配置在 Prolog 代码中） |
-| `<process_name>_variable.ti` | 变量定义 |
+| `<process_name>_variable.json` | 变量定义（JSON 格式） |
 | `<process_name>_prolog.ti` | Prolog 代码 |
 | `<process_name>_metadata.ti` | Metadata 代码 |
 | `<process_name>_data.ti` | Data 代码 |
@@ -143,7 +143,7 @@ Reviewer 会以 `coding-conventions.md` 和 `ti-functions.md` 为标准审查四
 
 ### 阶段 6：部署到 TM1
 
-使用 `create_process` 部署，将 7 个文件内容传入对应参数。如果 Process 已存在，用 `update_process` 只更新需要的字段。
+使用 `create_process_file` 部署，传入目录路径 `processes/<process_name>`（相对路径）。如果 Process 已存在，用 `update_process_file` 更新。目录中存在哪些文件就更新哪些，缺失的文件保持不变。
 
 部署完成后告知用户，询问是否需要执行测试。
 

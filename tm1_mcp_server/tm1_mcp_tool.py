@@ -1108,6 +1108,56 @@ def create_dimension_file(
         return _ok(tm1.create_dimension_from_file(file_path))
 
 
+# ── Process file tools ─────────────────────────────────────────────────
+
+@mcp.tool
+@_mcp_tool("create_process_file")
+def create_process_file(
+    instance: str,
+    file_path: str,
+) -> dict[str, Any]:
+    """Create a TI process from a directory of spec files.
+
+    Reads the standard 7-file bundle (4 code tabs + parameters + variables + datasource)
+    from the given directory. Directory name is used as the process name.
+    Path is relative to the project root directory.
+
+    Args:
+        instance: TM1 instance name.
+        file_path: Path to the process directory (relative to project root or absolute).
+
+    Returns:
+        ``{"result": {"success", "process_name", "files_read"}}``
+        or ``{"error": ...}``.
+    """
+    with _call(instance) as tm1:
+        return _ok(tm1.create_process_from_file(file_path))
+
+
+@mcp.tool
+@_mcp_tool("update_process_file")
+def update_process_file(
+    instance: str,
+    file_path: str,
+) -> dict[str, Any]:
+    """Update an existing TI process from a directory of spec files.
+
+    Only files present in the directory are updated; absent files mean
+    'keep unchanged'. Directory name is used as the process name.
+    Path is relative to the project root directory.
+
+    Args:
+        instance: TM1 instance name.
+        file_path: Path to the process directory (relative to project root or absolute).
+
+    Returns:
+        ``{"result": {"success", "process_name", "files_updated"}}``
+        or ``{"error": ...}``.
+    """
+    with _call(instance) as tm1:
+        return _ok(tm1.update_process_from_file(file_path))
+
+
 @mcp.tool
 @_mcp_tool("add_elements_file")
 def add_elements_file(

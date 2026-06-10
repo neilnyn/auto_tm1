@@ -57,6 +57,7 @@ MODEL_SKILL_TOOLS = {
 
 PROCESS_SKILL_TOOLS = {
     "mcp__tm1__create_process", "mcp__tm1__update_process",
+    "mcp__tm1__create_process_file", "mcp__tm1__update_process_file",
     "mcp__tm1__execute_process",
 }
 
