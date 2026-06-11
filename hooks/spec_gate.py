@@ -215,7 +215,6 @@ def main():
             sys.exit(2)
 
         tool_name = input_data.get("tool_name", "")
-        cwd = input_data.get("cwd", os.getcwd())
         session_id = input_data.get("session_id", "")
 
         # ── Fast path: read-only tools ──
@@ -224,7 +223,7 @@ def main():
 
         # ── Spec gate: gated tools ──
         if tool_name in GATED_TOOLS:
-            project_dir = get_active_project(session_id, cwd)
+            project_dir = get_active_project(session_id)
 
             if not project_dir:
                 block(

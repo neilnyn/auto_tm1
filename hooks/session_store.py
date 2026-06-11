@@ -21,33 +21,33 @@ def _is_valid_unicode_escape(raw: str, i: int) -> bool:
 
 
 def parser_hook_input(raw: str) -> dict:
-    """Parse Claude Code hook stdin JSON with fallback repair for Windows path escaping bugs.
+    r"""Parse Claude Code hook stdin JSON with fallback repair for Windows path escaping bugs.
 
     **Background problem:**
     Some Claude Code forks/wrappers (e.g. CodeFuse on Windows) produce malformed JSON
     via stdin where backslashes in Windows paths are inconsistently escaped. For example,
-    the same path may contain both correctly escaped ``\\\\`` and unescaped ``\\.``,
-    ``\\P``, etc., which are not valid JSON escape sequences and cause ``json.loads()``
+    the same path may contain both correctly escaped ``\\`` and unescaped ``\.``,
+    ``\P``, etc., which are not valid JSON escape sequences and cause ``json.loads()``
     to fail. This was first observed with a path like::
 
-        "C:\\\\Users\\\\X\\\.codefuse\\\\engine\\\\..."
+        "C:\\Users\\X\.codefuse\\engine\\..."
 
-    where ``\\\.codefuse`` has a single backslash (``\\. `` is invalid in JSON).
+    where ``\.codefuse`` has a single backslash (``\.`` is invalid in JSON).
 
     **Repair strategy:**
     1. Try standard ``json.loads()`` first (fast path — works for official Claude Code).
     2. On failure, walk the raw string character by character, tracking JSON string
-       boundaries (``"``). Inside strings, when encountering ``\\`` followed by a char:
-       - If it's a valid JSON escape (``" \\ / b f n r t uXXXX``), keep as-is.
-       - Otherwise (e.g. ``\\.``, ``\\P``, ``\\U``), double the backslash to ``\\\\``.
+       boundaries (``"``). Inside strings, when encountering ``\`` followed by a char:
+       - If it's a valid JSON escape (``" \ / b f n r t uXXXX``), keep as-is.
+       - Otherwise (e.g. ``\.``, ``\P``, ``\U``), double the backslash to ``\\``.
     3. If repair also fails, raise ``json.JSONDecodeError`` so the caller can decide
        (e.g. fail-open vs block).
 
-    **Why \\u is special:**
-    All JSON escapes except ``\\uXXXX`` are exactly 2 characters (``\\n``, ``\\t``, etc.).
-    ``\\u`` requires 4 additional hex digits. If a Windows path contains ``\\users``,
-    blindly keeping ``\\u`` as valid would produce an invalid ``\\us`` escape.
-    Hence ``\\u`` is checked separately via ``_is_valid_unicode_escape()``.
+    **Why \u is special:**
+    All JSON escapes except ``\uXXXX`` are exactly 2 characters (``\n``, ``\t``, etc.).
+    ``\u`` requires 4 additional hex digits. If a Windows path contains ``\users``,
+    blindly keeping ``\u`` as valid would produce an invalid ``\us`` escape.
+    Hence ``\u`` is checked separately via ``_is_valid_unicode_escape()``.
 
     **Usage example (in a PreToolUse hook)::**
 
@@ -194,8 +194,14 @@ def cleanup_stale_sessions(data):
     return bool(stale)
 
 
-def get_active_project(session_id, cwd):
-    """Get absolute path of active project for a session. None if not set."""
+def get_active_project(session_id):
+    """Get absolute path of active project for a session. None if not set.
+
+    The stored ``project`` is normalized relative to ``PROJECT_ROOT`` at
+    registration time (see cc_workon.register_session), so resolution uses
+    the stable PROJECT_ROOT rather than the hook's transient cwd. Reads no
+    longer depend on the cwd supplied via stdin.
+    """
     data = load_sessions()
     cleaned = cleanup_stale_sessions(data)
     if cleaned:
@@ -204,4 +210,4 @@ def get_active_project(session_id, cwd):
     info = data.get(session_id)
     if not info:
         return None
-    return os.path.normpath(os.path.join(cwd, info["project"]))
+    return os.path.normpath(os.path.join(PROJECT_ROOT, info["project"]))

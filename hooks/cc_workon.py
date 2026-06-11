@@ -26,14 +26,22 @@ from session_store import (
 # ── Session registration ──────────────────────────────────────────────
 
 
-def register_session(session_id, project_path, cwd):
-    """Register or update a session's active project."""
-    abs_path = os.path.normpath(os.path.join(cwd, project_path))
+def register_session(session_id, project_path):
+    """Register or update a session's active project.
+
+    ``project_path`` is resolved relative to PROJECT_ROOT — matching the
+    documented usage ``: cc-workon models/<name>`` / ``processes/<name>``,
+    not the user's shell cwd. It is validated to sit under PROJECT_ROOT and
+    exist on disk, then stored normalized relative to PROJECT_ROOT. This
+    drops cwd from the write side entirely, so writes and reads share one
+    stable basis (PROJECT_ROOT).
+    """
+    abs_path = os.path.normpath(os.path.join(PROJECT_ROOT, project_path))
     # Prevent path traversal outside project root
     if not abs_path.startswith(PROJECT_ROOT + os.sep):
         block(
             f"CC-WORKON ERROR: Path must be within the project repository: {project_path}\n"
-            "Paths outside the project root are not allowed."
+            f"but current path is {abs_path} ,Paths outside the project root are not allowed."
         )
     if not os.path.isdir(abs_path):
         block(
@@ -41,15 +49,18 @@ def register_session(session_id, project_path, cwd):
             "Please ensure the path is correct before proceeding."
         )
 
+    # Store relative to PROJECT_ROOT so reads no longer depend on cwd.
+    rel_path = os.path.relpath(abs_path, PROJECT_ROOT).replace("\\", "/")
+
     data = load_sessions()
     cleanup_stale_sessions(data)
     data[session_id] = {
-        "project": project_path.replace("\\", "/"),
+        "project": rel_path,
         "updated_at": __import__("time").time(),
     }
     save_sessions(data)
     acknowledge(
-        f"CC-WORKON: Session registered -> {project_path}\n"
+        f"CC-WORKON: Session registered -> {rel_path}\n"
         "You can now use MCP write tools for this project "
         "(subject to spec review gate)."
     )
@@ -66,7 +77,7 @@ _SYNTAX_ERROR = (
 )
 
 
-def handle_cc_workon(command, cwd, session_id):
+def handle_cc_workon(command, session_id):
     """Parse and process cc-workon command from Bash tool.
 
     Supports project paths containing spaces when the path is quoted:
@@ -86,7 +97,7 @@ def handle_cc_workon(command, cwd, session_id):
     project_path = next((g for g in match.groups() if g), None)
     if not project_path or not project_path.strip("'\""):
         block(_SYNTAX_ERROR)
-    register_session(session_id, project_path, cwd)
+    register_session(session_id, project_path)
 
 
 # ── Main entry point ──────────────────────────────────────────────────
@@ -107,7 +118,6 @@ def main():
 
         tool_name = input_data.get("tool_name", "")
         tool_input = input_data.get("tool_input", {})
-        cwd = input_data.get("cwd", os.getcwd())
         session_id = input_data.get("session_id", "")
 
         # Only handle Bash tool
@@ -118,7 +128,7 @@ def main():
         if "cc-workon" not in command:
             sys.exit(0)  # Not a cc-workon command, allow
 
-        handle_cc_workon(command, cwd, session_id)
+        handle_cc_workon(command, session_id)
 
     except SystemExit:
         raise
