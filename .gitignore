@@ -32,9 +32,6 @@ docs/
 .claude/agent-memory/tm1-explorer/*
 !.claude/agent-memory/tm1-explorer/.gitkeep
 
-# Hook session state (temporary, per-session)
-hooks/sessions.json
-
 # Plans directory — keep structure, ignore plan files
 plans/*
 !plans/.gitkeep
