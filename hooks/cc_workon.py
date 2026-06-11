@@ -58,15 +58,34 @@ def register_session(session_id, project_path, cwd):
 # ── cc-workon command handling ────────────────────────────────────────
 
 
+_SYNTAX_ERROR = (
+    "CC-WORKON: Invalid syntax. Usage: : cc-workon <project_path>\n"
+    'For paths containing spaces, quote the path: '
+    ': cc-workon "models/Sales Planning"\n'
+    "Example: : cc-workon models/Sales_Planning"
+)
+
+
 def handle_cc_workon(command, cwd, session_id):
-    """Parse and process cc-workon command from Bash tool."""
-    match = re.search(r'cc-workon\s+([^\s\'"]+)', command)
+    """Parse and process cc-workon command from Bash tool.
+
+    Supports project paths containing spaces when the path is quoted:
+        : cc-workon "models/Sales Planning"
+        : cc-workon 'models/Sales Planning'
+    A bare (unquoted) token is matched only up to the next whitespace, so an
+    unquoted path with spaces is rejected (quote it instead).
+    """
+    # A quoted path ("..." or '...') preserves inner spaces; otherwise fall
+    # back to a whitespace-delimited token for the standard no-spaces case.
+    match = re.search(
+        r'cc-workon\s+(?:"([^"]+)"|\'([^\']+)\'|(\S+))', command
+    )
     if not match:
-        block(
-            "CC-WORKON: Invalid syntax. Usage: : cc-workon <project_path>\n"
-            "Example: : cc-workon models/Sales_Planning"
-        )
-    project_path = match.group(1).strip("'\"")
+        block(_SYNTAX_ERROR)
+    # First non-empty capture group is the path (quoted groups carry spaces).
+    project_path = next((g for g in match.groups() if g), None)
+    if not project_path or not project_path.strip("'\""):
+        block(_SYNTAX_ERROR)
     register_session(session_id, project_path, cwd)
 
 

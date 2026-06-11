@@ -57,6 +57,18 @@ def _children_map(parents_map: dict[str, list[str]]) -> dict[str, list[str]]:
     return cm
 
 
+def _lower_keys(d: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of ``d`` with all keys lowercased.
+
+    Parameter/variable dicts may arrive from MCP callers or LLM-generated
+    JSON / inline text with non-standard casing (``"Name"``, ``"Type"``
+    instead of ``"name"``, ``"type"``). Normalizing keys up front lets
+    consumers use plain ``d["name"]`` / ``d.get("type", ...)`` without
+    case-mismatch KeyErrors or silent type fallback.
+    """
+    return {str(k).lower(): v for k, v in d.items()}
+
+
 class TM1OperationError(RuntimeError):
     """Raised when a TM1 server operation fails."""
 
@@ -1344,17 +1356,19 @@ class TM1Manager:
             if clear_existing:
                 process._parameters = []
             for param in parameters:
+                p = _lower_keys(param)
                 process.add_parameter(
-                    name=param["name"],
-                    prompt=param.get("prompt", ""),
-                    value=param.get("value", ""),
-                    parameter_type=param.get("type", "String"),
+                    name=p["name"],
+                    prompt=p.get("prompt", ""),
+                    value=p.get("value", ""),
+                    parameter_type=p.get("type", "String"),
                 )
         if variables is not None:
             if clear_existing:
                 process._variables = []
             for var in variables:
-                process.add_variable(var["name"], var.get("type", "String"))
+                v = _lower_keys(var)
+                process.add_variable(v["name"], v.get("type", "String"))
 
     @_tm1_api("create process")
     def create_process(
@@ -1517,7 +1531,8 @@ class TM1Manager:
         kwargs: dict[str, Any] = {}
         if parameters:
             for param in parameters:
-                kwargs[param["name"]] = param.get("value", "")
+                p = _lower_keys(param)
+                kwargs[p["name"]] = p.get("value", "")
         success, status, error_log_file = (
             self.service.processes.execute_with_return(
                 process_name, timeout=timeout, **kwargs
