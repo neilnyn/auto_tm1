@@ -21,9 +21,9 @@ description: >
 ## 工作流程概览
 
 ```
-需求文档/PRD → 按需探索TM1 → 设计Process → 生成7个文件 → 部署到TM1
-                  ↑                                    |
-                  └──── Human-in-the-loop 审查 ←────────┘
+需求文档/PRD → 按需探索TM1 → 设计Process ⇄ 生成7个文件 → 部署到TM1
+                               ↑              ↓
+                               └─ Human-in-the-loop 审查 ─┘
 ```
 
 ## 前置条件
@@ -122,7 +122,7 @@ Clarify with the user：
 
 ### 阶段 4：代码审查（ti-code-reviewer）
 
-代码生成后，启动 ti-code-reviewer subagent 审查：
+代码生成后，先启动 ti-code-reviewer subagent 审查：
 
 ```
 Agent(subagent_type="ti-code-reviewer", prompt="Review the TI Process code in processes/<process_name>/. review prolog, metadata, data, epilog tabs.")
