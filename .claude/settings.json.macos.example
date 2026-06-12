@@ -1,0 +1,38 @@
+{
+  "_comment_": "macOS EXAMPLE -- not loaded by Claude Code (filename is not settings.json). Copy to settings.json (after backing up the Windows version) to run on macOS. Only difference vs the Windows settings.json: every hook command uses .venv/bin/python instead of .venv/Scripts/python.exe.",
+  "enabledPlugins": {
+    "agent-skills@addy-agent-skills": false
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".venv/bin/python hooks/cc_workon.py"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__tm1__*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".venv/bin/python hooks/spec_gate.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".venv/bin/python hooks/session_cleanup.py"
+          }
+        ]
+      }
+    ]
+  }
+}

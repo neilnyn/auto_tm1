@@ -1,0 +1,18 @@
+{
+     "_comment_": "macOS EXAMPLE -- not loaded by Claude Code (filename is not .mcp.json). Copy to .mcp.json (after backing up the Windows version) to run on macOS. Only difference vs the Windows .mcp.json: command uses .venv/bin/python instead of .venv/Scripts/python.exe.",
+
+     "mcpServers":{
+
+          "tm1":{
+
+               "command":".venv/bin/python",
+               "args":["tm1_mcp_server/tm1_mcp_tool.py"]
+
+          }
+
+
+     }
+
+
+
+}

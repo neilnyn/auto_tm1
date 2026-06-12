@@ -20,6 +20,7 @@ from session_store import (
     acknowledge,
     block,
     PROJECT_ROOT,
+    parser_hook_input,
 )
 
 
@@ -107,7 +108,7 @@ def main():
     try:
         raw_input = sys.stdin.read()
         try:
-            input_data = json.loads(raw_input)
+            input_data = parser_hook_input(raw_input)
         except (json.JSONDecodeError, EOFError):
             print(
                 "CC-WORKON: Failed to parse hook input.\n"
